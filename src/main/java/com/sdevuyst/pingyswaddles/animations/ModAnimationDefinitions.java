@@ -55,16 +55,6 @@ public class ModAnimationDefinitions
             ))
             .build();
 
-    public static final AnimationDefinition EMPEROR_PENGUIN_TALKING = AnimationDefinition.Builder.withLength(4.0F).looping()
-            .addAnimation("bone", new AnimationChannel(AnimationChannel.Targets.POSITION,
-                    new Keyframe(3.0417F, KeyframeAnimations.posVec(1.0F, 0.0F, 0.0F), AnimationChannel.Interpolations.CATMULLROM)
-            ))
-            .addAnimation("bone", new AnimationChannel(AnimationChannel.Targets.SCALE,
-                    new Keyframe(0.0F, KeyframeAnimations.scaleVec(0.5F, 0.5F, 0.5F), AnimationChannel.Interpolations.CATMULLROM),
-                    new Keyframe(1.125F, KeyframeAnimations.scaleVec(0.5F, 0.5F, 0.5F), AnimationChannel.Interpolations.CATMULLROM)
-            ))
-            .build();
-
     public static final AnimationDefinition EMPEROR_PENGUIN_FALLING = AnimationDefinition.Builder.withLength(4.0F).looping()
             .addAnimation("bone", new AnimationChannel(AnimationChannel.Targets.POSITION,
                     new Keyframe(0.0F, KeyframeAnimations.posVec(1.0F, 0.0F, 0.0F), AnimationChannel.Interpolations.CATMULLROM),

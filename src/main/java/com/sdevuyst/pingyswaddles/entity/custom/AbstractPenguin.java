@@ -1,8 +1,9 @@
 package com.sdevuyst.pingyswaddles.entity.custom;
 
-import com.sdevuyst.pingyswaddles.entity.ModEntities;
 import net.minecraft.core.BlockPos;
-import net.minecraft.server.level.ServerLevel;
+import net.minecraft.network.syncher.EntityDataAccessor;
+import net.minecraft.network.syncher.EntityDataSerializers;
+import net.minecraft.network.syncher.SynchedEntityData;
 import net.minecraft.util.RandomSource;
 import net.minecraft.world.entity.*;
 import net.minecraft.world.entity.ai.attributes.AttributeSupplier;
@@ -10,18 +11,29 @@ import net.minecraft.world.entity.ai.attributes.Attributes;
 import net.minecraft.world.entity.ai.goal.*;
 import net.minecraft.world.entity.animal.Animal;
 import net.minecraft.world.entity.animal.horse.AbstractHorse;
-import net.minecraft.world.entity.monster.Monster;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
+import net.minecraft.world.item.crafting.Ingredient;
+import net.minecraft.world.level.ItemLike;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.ServerLevelAccessor;
-import org.jetbrains.annotations.Nullable;
 
 public abstract class AbstractPenguin extends Animal {
+    private static final Ingredient FOOD_ITEMS;
+
+    private static final EntityDataAccessor<Boolean> FALLING =
+            SynchedEntityData.defineId(AbstractPenguin.class, EntityDataSerializers.BOOLEAN);
 
     public final AnimationState idleAnimationState = new AnimationState();
     private int idleAnimationTimeout = 0;
+
+    public AnimationState fallingAnimationState = new AnimationState();
+    private int fallingAnimationTimeout = 0;
+
+    public AnimationState landingAnimationState = new AnimationState();
+    private int landingAnimationTimeout = 0;
+
     protected AbstractPenguin(EntityType<? extends Animal> pEntityType, Level pLevel) {
         super(pEntityType, pLevel);
     }
@@ -47,14 +59,41 @@ public abstract class AbstractPenguin extends Animal {
         this.walkAnimation.update(f, 0.2f);
     }
 
+    public void setFalling(boolean falling) {
+        this.entityData.set(FALLING, falling);
+    }
+
+    public boolean isFalling() {
+        setFalling(this.getPose() == Pose.FALL_FLYING);
+        return this.entityData.get(FALLING);
+    }
+
     private void setupAnimationStates() {
         if(this.idleAnimationTimeout <= 0) {
-            this.idleAnimationTimeout = this.random.nextInt(40) + 80;
+            this.idleAnimationTimeout = this.random.nextInt(40) + 100;
             this.idleAnimationState.start(this.tickCount);
         } else {
             --this.idleAnimationTimeout;
         }
+
+        if(this.isFalling() && fallingAnimationTimeout <= 0) {
+            fallingAnimationTimeout = 10; // Length in ticks of your animation
+            fallingAnimationState.start(this.tickCount);
+        } else {
+            --this.fallingAnimationTimeout;
+        }
+
+        if(!this.isFalling()) {
+            fallingAnimationState.stop();
+        }
     }
+
+    @Override
+    protected void defineSynchedData() {
+        super.defineSynchedData();
+        this.entityData.define(FALLING, false);
+    }
+
 
     public static AttributeSupplier.Builder createAttributes()
     {
@@ -66,19 +105,24 @@ public abstract class AbstractPenguin extends Animal {
 
     protected void registerGoals() {
         this.goalSelector.addGoal(2, new BreedGoal(this, 1.0, AbstractHorse.class));
+        this.goalSelector.addGoal(3, new TemptGoal(this, 1.0, FOOD_ITEMS, false));
         this.goalSelector.addGoal(4, new FollowParentGoal(this, 1.0));
         this.goalSelector.addGoal(6, new WaterAvoidingRandomStrollGoal(this, 0.7));
         this.goalSelector.addGoal(7, new LookAtPlayerGoal(this, Player.class, 6.0F));
         this.goalSelector.addGoal(8, new RandomLookAroundGoal(this));
-
-    }
-
-    @Override
-    public boolean isFood(ItemStack pStack) {
-        return pStack.is(Items.SALMON);
     }
 
     public static boolean canSpawn(EntityType<EmperorPenguinEntity> emperorPenguinEntityEntityType, ServerLevelAccessor serverLevelAccessor, MobSpawnType mobSpawnType, BlockPos blockPos, RandomSource randomSource) {
         return checkAnimalSpawnRules(emperorPenguinEntityEntityType, serverLevelAccessor, mobSpawnType, blockPos, randomSource);
     }
+    @Override
+    public boolean isFood(ItemStack pStack) {
+        return FOOD_ITEMS.test(pStack);
+    }
+
+
+    static {
+        FOOD_ITEMS = Ingredient.of(new ItemLike[]{Items.SALMON, Items.TROPICAL_FISH, Items.COD});
+    }
+
 }
