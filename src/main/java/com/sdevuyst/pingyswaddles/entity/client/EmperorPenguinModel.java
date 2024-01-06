@@ -65,7 +65,7 @@ public class EmperorPenguinModel<T extends Entity> extends HierarchicalModel<T> 
         this.root().getAllParts().forEach(ModelPart::resetPose);
         this.applyHeadRotation(entity, netHeadYaw, headPitch, ageInTicks);
 
-        this.animateWalk(EmperorPenguinAnimationDefinitions.EMPEROR_PENGUIN_WALKING, limbSwing, limbSwingAmount, 2f, 2.5f);
+        this.animateWalk(EmperorPenguinAnimationDefinitions.WALKING, limbSwing, limbSwingAmount, 2f, 2.5f);
 
         // this.animate(((EmperorPenguinEntity) entity).idleAnimationState, ModAnimationDefinitions.EMPEROR_PENGUIN_WINGING, ageInTicks, 1f);
         // this.animate(((EmperorPenguinEntity) entity).fallingAnimationState, ModAnimationDefinitions.EMPEROR_PENGUIN_FALLING, ageInTicks, 1f);
@@ -78,8 +78,8 @@ public class EmperorPenguinModel<T extends Entity> extends HierarchicalModel<T> 
     }
 
     private void applyHeadRotation(T pEntity, float pNetHeadYaw, float pHeadPitch, float pAgeInTicks) {
-        pNetHeadYaw = Mth.clamp(pNetHeadYaw, -30.0F, 30.0F);
-        pHeadPitch = Mth.clamp(pHeadPitch, -25.0F, 45.0F);
+        pNetHeadYaw = Mth.clamp(pNetHeadYaw, -25.0F, 25.0F);
+        pHeadPitch = Mth.clamp(pHeadPitch, -5.0F, 15.0F);
 
         this.head.yRot = pNetHeadYaw * 0.017453292F;
         this.head.xRot = pHeadPitch * -0.017453292F;

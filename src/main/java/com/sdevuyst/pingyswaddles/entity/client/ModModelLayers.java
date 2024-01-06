@@ -10,4 +10,8 @@ public class ModModelLayers
             new ResourceLocation(PingysWaddles.MOD_ID, "emperor_penguin_layer"), "main"
     );
 
+    public static final ModelLayerLocation BABY_EMPEROR_PENGUIN_LAYER = new ModelLayerLocation(
+            new ResourceLocation(PingysWaddles.MOD_ID, "baby_emperor_penguin_layer"), "main"
+    );
+
 }

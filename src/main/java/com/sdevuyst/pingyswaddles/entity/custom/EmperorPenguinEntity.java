@@ -23,5 +23,6 @@ public class EmperorPenguinEntity extends AbstractPenguin {
 
     static {
         NORMAL_DIMENSIONS = EntityDimensions.fixed(1.0F, 1.9F);
+        BABY_DIMENSIONS = EntityDimensions.fixed(0.5F, 0.9F);
     }
 }

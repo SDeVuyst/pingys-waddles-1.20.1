@@ -7,7 +7,7 @@ import net.minecraft.client.animation.KeyframeAnimations;
 
 public class EmperorPenguinAnimationDefinitions
 {
-    public static final AnimationDefinition EMPEROR_PENGUIN_WINGING = AnimationDefinition.Builder.withLength(2.0F).looping()
+    public static final AnimationDefinition WINGING = AnimationDefinition.Builder.withLength(2.0F).looping()
             .addAnimation("rightwing", new AnimationChannel(AnimationChannel.Targets.ROTATION,
                     new Keyframe(0.0F, KeyframeAnimations.degreeVec(0.0F, 0.0F, 0.0F), AnimationChannel.Interpolations.CATMULLROM),
                     new Keyframe(1.0F, KeyframeAnimations.degreeVec(0.0F, 0.0F, -27.5F), AnimationChannel.Interpolations.CATMULLROM),
@@ -26,7 +26,7 @@ public class EmperorPenguinAnimationDefinitions
             ))
             .build();
 
-        public static final AnimationDefinition EMPEROR_PENGUIN_WALKING = AnimationDefinition.Builder.withLength(1.0F).looping()
+        public static final AnimationDefinition WALKING = AnimationDefinition.Builder.withLength(1.0F).looping()
                 .addAnimation("emperor_penguin", new AnimationChannel(AnimationChannel.Targets.ROTATION,
                         new Keyframe(0.0F, KeyframeAnimations.degreeVec(0.0F, 0.0F, 0.0F), AnimationChannel.Interpolations.LINEAR),
                         new Keyframe(0.25F, KeyframeAnimations.degreeVec(0.0F, -7.0F, -10.0F), AnimationChannel.Interpolations.LINEAR),
@@ -64,7 +64,7 @@ public class EmperorPenguinAnimationDefinitions
                 ))
                 .build();
 
-    public static final AnimationDefinition EMPEROR_PENGUIN_FALLING = AnimationDefinition.Builder.withLength(4.0F).looping()
+    public static final AnimationDefinition FALLING = AnimationDefinition.Builder.withLength(4.0F).looping()
             .addAnimation("emperor_penguin", new AnimationChannel(AnimationChannel.Targets.POSITION,
                     new Keyframe(0.0F, KeyframeAnimations.posVec(1.0F, 0.0F, 0.0F), AnimationChannel.Interpolations.CATMULLROM),
                     new Keyframe(0.375F, KeyframeAnimations.posVec(1.0F, 0.0F, 0.0F), AnimationChannel.Interpolations.LINEAR)
@@ -87,7 +87,7 @@ public class EmperorPenguinAnimationDefinitions
             ))
             .build();
 
-    public static final AnimationDefinition EMPEROR_PENGUIN_LANDING = AnimationDefinition.Builder.withLength(0.5F).looping()
+    public static final AnimationDefinition LANDING = AnimationDefinition.Builder.withLength(0.5F).looping()
             .addAnimation("emperor_penguin", new AnimationChannel(AnimationChannel.Targets.ROTATION,
                     new Keyframe(0.0F, KeyframeAnimations.degreeVec(0.0F, 0.0F, 0.0F), AnimationChannel.Interpolations.LINEAR)
             ))

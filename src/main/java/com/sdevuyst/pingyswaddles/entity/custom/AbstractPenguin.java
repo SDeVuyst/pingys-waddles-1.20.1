@@ -24,6 +24,7 @@ import net.minecraft.world.level.ServerLevelAccessor;
 public abstract class AbstractPenguin extends Animal {
     private static final Ingredient FOOD_ITEMS;
     protected static EntityDimensions NORMAL_DIMENSIONS;
+    protected static EntityDimensions BABY_DIMENSIONS;
 
     protected AbstractPenguin(EntityType<? extends Animal> pEntityType, Level pLevel) {
         super(pEntityType, pLevel);
@@ -62,12 +63,12 @@ public abstract class AbstractPenguin extends Animal {
     {
         return Animal.createLivingAttributes()
                 .add(Attributes.MAX_HEALTH, 8)
-                .add(Attributes.MOVEMENT_SPEED, 0.075D)
+                .add(Attributes.MOVEMENT_SPEED, 0.12D)
                 .add(Attributes.FOLLOW_RANGE, 15);
     }
 
     protected void registerGoals() {
-        this.goalSelector.addGoal(2, new BreedGoal(this, 1.0, AbstractHorse.class));
+        this.goalSelector.addGoal(2, new BreedGoal(this, 1.0, AbstractPenguin.class));
         this.goalSelector.addGoal(3, new TemptGoal(this, 1.0, FOOD_ITEMS, false));
         this.goalSelector.addGoal(4, new FollowParentGoal(this, 1.0));
         this.goalSelector.addGoal(6, new WaterAvoidingRandomStrollGoal(this, 0.7));
@@ -85,6 +86,9 @@ public abstract class AbstractPenguin extends Animal {
 
     @Override
     public EntityDimensions getDimensions(Pose pPose) {
+        if (this.isBaby()) {
+            return BABY_DIMENSIONS.scale(this.getScale());
+        }
         return NORMAL_DIMENSIONS.scale(this.getScale());
     }
 
