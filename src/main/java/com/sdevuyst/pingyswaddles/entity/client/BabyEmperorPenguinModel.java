@@ -3,7 +3,9 @@ package com.sdevuyst.pingyswaddles.entity.client;
 
 import com.mojang.blaze3d.vertex.PoseStack;
 import com.mojang.blaze3d.vertex.VertexConsumer;
+import com.sdevuyst.pingyswaddles.animations.BabyEmperorPenguinAnimationDefinitions;
 import com.sdevuyst.pingyswaddles.animations.EmperorPenguinAnimationDefinitions;
+import com.sdevuyst.pingyswaddles.entity.custom.EmperorPenguinEntity;
 import net.minecraft.client.model.HierarchicalModel;
 import net.minecraft.client.model.geom.ModelLayerLocation;
 import net.minecraft.client.model.geom.ModelPart;
@@ -68,6 +70,10 @@ public class BabyEmperorPenguinModel<T extends Entity> extends HierarchicalModel
     public void setupAnim(T entity, float limbSwing, float limbSwingAmount, float ageInTicks, float netHeadYaw, float headPitch) {
         this.root().getAllParts().forEach(ModelPart::resetPose);
         this.applyHeadRotation(entity, netHeadYaw, headPitch, ageInTicks);
+
+        this.animateWalk(BabyEmperorPenguinAnimationDefinitions.WALKING, limbSwing, limbSwingAmount, 2f, 2.5f);
+        this.animate(((EmperorPenguinEntity) entity).idleAnimationState, BabyEmperorPenguinAnimationDefinitions.WINGING, ageInTicks, 1f);
+        this.animate(((EmperorPenguinEntity) entity).fallingAnimationState, BabyEmperorPenguinAnimationDefinitions.FALLING, ageInTicks, 1f);
     }
 
     @Override
