@@ -1,6 +1,7 @@
 package com.sdevuyst.pingyswaddles.event;
 
 import com.sdevuyst.pingyswaddles.PingysWaddles;
+import com.sdevuyst.pingyswaddles.entity.client.BabyEmperorPenguinModel;
 import com.sdevuyst.pingyswaddles.entity.client.EmperorPenguinModel;
 import com.sdevuyst.pingyswaddles.entity.client.ModModelLayers;
 import net.minecraftforge.api.distmarker.Dist;
@@ -15,5 +16,6 @@ public class ModEventBusClientEvents
     public static void registerLayer(EntityRenderersEvent.RegisterLayerDefinitions event)
     {
         event.registerLayerDefinition(ModModelLayers.EMPEROR_PENGUIN_LAYER, EmperorPenguinModel::createBodyLayer);
+        event.registerLayerDefinition(ModModelLayers.BABY_EMPEROR_PENGUIN_LAYER, BabyEmperorPenguinModel::createBodyLayer);
     }
 }

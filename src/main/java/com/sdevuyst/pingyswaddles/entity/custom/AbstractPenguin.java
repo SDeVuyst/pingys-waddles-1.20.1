@@ -4,6 +4,8 @@ import net.minecraft.core.BlockPos;
 import net.minecraft.network.syncher.EntityDataAccessor;
 import net.minecraft.network.syncher.EntityDataSerializers;
 import net.minecraft.network.syncher.SynchedEntityData;
+import net.minecraft.sounds.SoundEvents;
+import net.minecraft.util.Mth;
 import net.minecraft.util.RandomSource;
 import net.minecraft.world.entity.*;
 import net.minecraft.world.entity.ai.attributes.AttributeSupplier;
@@ -21,21 +23,13 @@ import net.minecraft.world.level.ServerLevelAccessor;
 
 public abstract class AbstractPenguin extends Animal {
     private static final Ingredient FOOD_ITEMS;
-
-    private static final EntityDataAccessor<Boolean> FALLING =
-            SynchedEntityData.defineId(AbstractPenguin.class, EntityDataSerializers.BOOLEAN);
-
-    public final AnimationState idleAnimationState = new AnimationState();
-    private int idleAnimationTimeout = 0;
-
-    public AnimationState fallingAnimationState = new AnimationState();
-    private int fallingAnimationTimeout = 0;
-
-    public AnimationState landingAnimationState = new AnimationState();
-    private int landingAnimationTimeout = 0;
+    protected static EntityDimensions NORMAL_DIMENSIONS;
+    protected static EntityDimensions BABY_DIMENSIONS;
 
     protected AbstractPenguin(EntityType<? extends Animal> pEntityType, Level pLevel) {
         super(pEntityType, pLevel);
+
+        this.refreshDimensions();
     }
 
     @Override
@@ -46,6 +40,11 @@ public abstract class AbstractPenguin extends Animal {
             setupAnimationStates();
         }
     }
+
+    private void setupAnimationStates() {
+        ;
+    }
+
 
     @Override
     protected void updateWalkAnimation(float pPartialTick) {
@@ -59,52 +58,17 @@ public abstract class AbstractPenguin extends Animal {
         this.walkAnimation.update(f, 0.2f);
     }
 
-    public void setFalling(boolean falling) {
-        this.entityData.set(FALLING, falling);
-    }
-
-    public boolean isFalling() {
-        setFalling(this.getPose() == Pose.FALL_FLYING);
-        return this.entityData.get(FALLING);
-    }
-
-    private void setupAnimationStates() {
-        if(this.idleAnimationTimeout <= 0) {
-            this.idleAnimationTimeout = this.random.nextInt(40) + 100;
-            this.idleAnimationState.start(this.tickCount);
-        } else {
-            --this.idleAnimationTimeout;
-        }
-
-        if(this.isFalling() && fallingAnimationTimeout <= 0) {
-            fallingAnimationTimeout = 10; // Length in ticks of your animation
-            fallingAnimationState.start(this.tickCount);
-        } else {
-            --this.fallingAnimationTimeout;
-        }
-
-        if(!this.isFalling()) {
-            fallingAnimationState.stop();
-        }
-    }
-
-    @Override
-    protected void defineSynchedData() {
-        super.defineSynchedData();
-        this.entityData.define(FALLING, false);
-    }
-
 
     public static AttributeSupplier.Builder createAttributes()
     {
         return Animal.createLivingAttributes()
                 .add(Attributes.MAX_HEALTH, 8)
-                .add(Attributes.MOVEMENT_SPEED, 0.15D)
+                .add(Attributes.MOVEMENT_SPEED, 0.12D)
                 .add(Attributes.FOLLOW_RANGE, 15);
     }
 
     protected void registerGoals() {
-        this.goalSelector.addGoal(2, new BreedGoal(this, 1.0, AbstractHorse.class));
+        this.goalSelector.addGoal(2, new BreedGoal(this, 1.0, AbstractPenguin.class));
         this.goalSelector.addGoal(3, new TemptGoal(this, 1.0, FOOD_ITEMS, false));
         this.goalSelector.addGoal(4, new FollowParentGoal(this, 1.0));
         this.goalSelector.addGoal(6, new WaterAvoidingRandomStrollGoal(this, 0.7));
@@ -118,6 +82,18 @@ public abstract class AbstractPenguin extends Animal {
     @Override
     public boolean isFood(ItemStack pStack) {
         return FOOD_ITEMS.test(pStack);
+    }
+
+    @Override
+    public EntityDimensions getDimensions(Pose pPose) {
+        if (this.isBaby()) {
+            return BABY_DIMENSIONS.scale(this.getScale());
+        }
+        return NORMAL_DIMENSIONS.scale(this.getScale());
+    }
+
+    protected float getStandingEyeHeight(Pose pPose, EntityDimensions pSize) {
+        return pSize.height * 0.85F;
     }
 
 
