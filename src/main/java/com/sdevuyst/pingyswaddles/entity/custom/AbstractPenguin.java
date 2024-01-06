@@ -62,7 +62,7 @@ public abstract class AbstractPenguin extends Animal {
     {
         return Animal.createLivingAttributes()
                 .add(Attributes.MAX_HEALTH, 8)
-                .add(Attributes.MOVEMENT_SPEED, 0.15D)
+                .add(Attributes.MOVEMENT_SPEED, 0.075D)
                 .add(Attributes.FOLLOW_RANGE, 15);
     }
 
