@@ -14,4 +14,7 @@ public class ModModelLayers
             new ResourceLocation(PingysWaddles.MOD_ID, "baby_emperor_penguin_layer"), "main"
     );
 
+    public static final ModelLayerLocation OAK_SURFBOARD_LAYER = new ModelLayerLocation(
+            new ResourceLocation(PingysWaddles.MOD_ID, "surfboard_layer"), "main"
+    );
 }

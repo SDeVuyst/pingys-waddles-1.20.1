@@ -4,8 +4,9 @@ import com.mojang.logging.LogUtils;
 import com.sdevuyst.pingyswaddles.block.ModBlocks;
 import com.sdevuyst.pingyswaddles.entity.ModEntities;
 import com.sdevuyst.pingyswaddles.entity.client.EmperorPenguinRenderer;
-import com.sdevuyst.pingyswaddles.item.custom.ModCreativeModTabs;
-import com.sdevuyst.pingyswaddles.item.custom.ModItems;
+import com.sdevuyst.pingyswaddles.entity.client.SurfboardRenderer;
+import com.sdevuyst.pingyswaddles.item.ModCreativeModTabs;
+import com.sdevuyst.pingyswaddles.item.ModItems;
 import net.minecraft.client.renderer.entity.EntityRenderers;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.common.MinecraftForge;
@@ -77,6 +78,7 @@ public class PingysWaddles
         public static void onClientSetup(FMLClientSetupEvent event)
         {
             EntityRenderers.register(ModEntities.EMPEROR_PENGUIN.get(), EmperorPenguinRenderer::new);
+            EntityRenderers.register(ModEntities.SURFBOARD.get(), SurfboardRenderer::new);
         }
     }
 }

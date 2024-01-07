@@ -1,4 +1,4 @@
-package com.sdevuyst.pingyswaddles.item.custom;
+package com.sdevuyst.pingyswaddles.item;
 
 import com.sdevuyst.pingyswaddles.PingysWaddles;
 import net.minecraft.core.registries.Registries;
@@ -14,12 +14,13 @@ public class ModCreativeModTabs
     public static final DeferredRegister<CreativeModeTab> CREATIVE_MODE_TABS =
             DeferredRegister.create(Registries.CREATIVE_MODE_TAB, PingysWaddles.MOD_ID);
 
-    public static final RegistryObject<CreativeModeTab> TUTORIAL_TAB = CREATIVE_MODE_TABS.register("diabolicahh_tab",
+    public static final RegistryObject<CreativeModeTab> PINGYS_WADDLES_TAB = CREATIVE_MODE_TABS.register("diabolicahh_tab",
             () -> CreativeModeTab.builder().icon(() -> new ItemStack(ModItems.EMPEROR_PENGUIN_SPAWN_EGG.get()))
                     .title(Component.translatable("creativetab.pingys_waddles_tab"))
                     .displayItems((pParameters, pOutput) -> {
 
                         pOutput.accept(ModItems.EMPEROR_PENGUIN_SPAWN_EGG.get());
+                        pOutput.accept(ModItems.OAK_SURFBOARD.get());
 
                     })
                     .build());
