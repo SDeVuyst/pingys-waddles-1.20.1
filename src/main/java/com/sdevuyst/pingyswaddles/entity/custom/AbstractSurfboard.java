@@ -4,12 +4,11 @@ import com.google.common.collect.Lists;
 import com.google.common.collect.UnmodifiableIterator;
 import com.sdevuyst.pingyswaddles.item.ModItems;
 import net.minecraft.BlockUtil;
-import net.minecraft.client.player.Input;
+import net.minecraft.client.Minecraft;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.core.particles.ParticleTypes;
 import net.minecraft.nbt.CompoundTag;
-import net.minecraft.network.protocol.game.ServerboundPaddleBoatPacket;
 import net.minecraft.network.syncher.EntityDataAccessor;
 import net.minecraft.network.syncher.EntityDataSerializers;
 import net.minecraft.network.syncher.SynchedEntityData;
@@ -25,7 +24,6 @@ import net.minecraft.world.entity.*;
 import net.minecraft.world.entity.animal.Animal;
 import net.minecraft.world.entity.animal.WaterAnimal;
 import net.minecraft.world.entity.player.Player;
-import net.minecraft.world.entity.vehicle.Boat;
 import net.minecraft.world.entity.vehicle.DismountHelper;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
@@ -43,11 +41,11 @@ import net.minecraft.world.phys.Vec3;
 import net.minecraft.world.phys.shapes.BooleanOp;
 import net.minecraft.world.phys.shapes.Shapes;
 import net.minecraft.world.phys.shapes.VoxelShape;
-import net.minecraftforge.common.extensions.IForgeBoat;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
-import net.minecraftforge.fluids.FluidType;
+import org.jetbrains.annotations.NotNull;
 
 import javax.annotation.Nullable;
+import java.awt.event.InputEvent;
 import java.util.Iterator;
 import java.util.List;
 import java.util.function.IntFunction;
@@ -78,11 +76,6 @@ public abstract class AbstractSurfboard extends Entity {
     private SurfboardEntity.Status status;
     private SurfboardEntity.Status oldStatus;
     private double lastYd;
-    private boolean isAboveBubbleColumn;
-    private boolean bubbleColumnDirectionIsDown;
-    private float bubbleMultiplier;
-    private float bubbleAngle;
-    private float bubbleAngleO;
 
     public AbstractSurfboard(EntityType<?> pEntityType, Level pLevel) {
         super(pEntityType, pLevel);
@@ -97,6 +90,7 @@ public abstract class AbstractSurfboard extends Entity {
         this.zo = pZ;
     }
 
+    @Override
     protected float getEyeHeight(Pose pPose, EntityDimensions pSize) {
         return pSize.height;
     }
@@ -105,6 +99,7 @@ public abstract class AbstractSurfboard extends Entity {
         return MovementEmission.EVENTS;
     }
 
+    @Override
     protected void defineSynchedData() {
         this.entityData.define(DATA_ID_HURT, 0);
         this.entityData.define(DATA_ID_HURTDIR, 1);
@@ -114,6 +109,7 @@ public abstract class AbstractSurfboard extends Entity {
         this.entityData.define(DATA_ID_PADDLING, false);
     }
 
+    @Override
     public boolean canCollideWith(Entity pEntity) {
         return canVehicleCollide(this, pEntity);
     }
@@ -122,23 +118,29 @@ public abstract class AbstractSurfboard extends Entity {
         return (pEntity.canBeCollidedWith() || pEntity.isPushable()) && !pVehicle.isPassengerOfSameVehicle(pEntity);
     }
 
+    @Override
     public boolean canBeCollidedWith() {
         return true;
     }
 
+    @Override
     public boolean isPushable() {
         return true;
     }
 
+    @Override
     protected Vec3 getRelativePortalPosition(Direction.Axis pAxis, BlockUtil.FoundRectangle pPortal) {
         return LivingEntity.resetForwardDirectionOfRelativePortalPosition(super.getRelativePortalPosition(pAxis, pPortal));
     }
 
+    @Override
     public double getPassengersRidingOffset() {
         return -0.1;
     }
 
+    @Override
     public boolean hurt(DamageSource pSource, float pAmount) {
+
         if (this.isInvulnerableTo(pSource)) {
             return false;
         } else if (!this.level().isClientSide && !this.isRemoved()) {
@@ -166,22 +168,6 @@ public abstract class AbstractSurfboard extends Entity {
         this.spawnAtLocation(this.getDropItem());
     }
 
-    public void onAboveBubbleCol(boolean pDownwards) {
-        if (!this.level().isClientSide) {
-            this.isAboveBubbleColumn = true;
-            this.bubbleColumnDirectionIsDown = pDownwards;
-            if (this.getBubbleTime() == 0) {
-                this.setBubbleTime(60);
-            }
-        }
-
-        this.level().addParticle(ParticleTypes.SPLASH, this.getX() + (double)this.random.nextFloat(), this.getY() + 0.7, this.getZ() + (double)this.random.nextFloat(), 0.0, 0.0, 0.0);
-        if (this.random.nextInt(20) == 0) {
-            this.level().playLocalSound(this.getX(), this.getY(), this.getZ(), this.getSwimSplashSound(), this.getSoundSource(), 1.0F, 0.8F + 0.4F * this.random.nextFloat(), false);
-            this.gameEvent(GameEvent.SPLASH, this.getControllingPassenger());
-        }
-
-    }
 
     public void push(Entity pEntity) {
         if (pEntity instanceof SurfboardEntity) {
@@ -218,6 +204,7 @@ public abstract class AbstractSurfboard extends Entity {
         return !this.isRemoved();
     }
 
+    @Override
     public void lerpTo(double pX, double pY, double pZ, float pYaw, float pPitch, int pPosRotationIncrements, boolean pTeleport) {
         this.lerpX = pX;
         this.lerpY = pY;
@@ -227,19 +214,24 @@ public abstract class AbstractSurfboard extends Entity {
         this.lerpSteps = 10;
     }
 
-    public Direction getMotionDirection() {
+    @Override
+    public @NotNull Direction getMotionDirection() {
         return this.getDirection().getClockWise();
     }
 
+    @Override
     public void tick() {
         this.oldStatus = this.status;
         this.status = this.getStatus();
+
+        // out of control surfboard
         if (this.status != SurfboardEntity.Status.UNDER_WATER && this.status != SurfboardEntity.Status.UNDER_FLOWING_WATER) {
             this.outOfControlTicks = 0.0F;
         } else {
             ++this.outOfControlTicks;
         }
 
+        // eject passengers if out of control for more than 60 ticks (3 sec)
         if (!this.level().isClientSide && this.outOfControlTicks >= 60.0F) {
             this.ejectPassengers();
         }
@@ -254,6 +246,8 @@ public abstract class AbstractSurfboard extends Entity {
 
         super.tick();
         this.tickLerp();
+
+        // player is controlling surfboard
         if (this.isControlledByLocalInstance()) {
 
             this.floatSurfboard();
@@ -261,12 +255,23 @@ public abstract class AbstractSurfboard extends Entity {
                 this.controlSurfboard();
             }
 
+            // check inputs
+            this.inputUp = Minecraft.getInstance().options.keyUp.isDown();
+            this.inputDown = Minecraft.getInstance().options.keyDown.isDown();
+            this.inputLeft = Minecraft.getInstance().options.keyLeft.isDown();
+            this.inputRight= Minecraft.getInstance().options.keyRight.isDown();
+
+            this.setPaddling(this.inputRight || this.inputLeft || this.inputUp || this.inputDown);
+
+            // actually move the surfboard
             this.move(MoverType.SELF, this.getDeltaMovement());
+
         } else {
+            // don't move anything
             this.setDeltaMovement(Vec3.ZERO);
         }
 
-        this.tickBubbleColumn();
+        // play paddling sounds
         for(int i = 0; i <= 1; ++i) {
             if (!this.isSilent() && this.isPaddling()) {
                 SoundEvent soundevent = this.getPaddleSound();
@@ -280,11 +285,13 @@ public abstract class AbstractSurfboard extends Entity {
         }
 
         this.checkInsideBlocks();
+
+        // non-player entities start riding surfboat when getting closeby
         List<Entity> list = this.level().getEntities(this, this.getBoundingBox().inflate(0.20000000298023224, -0.009999999776482582, 0.20000000298023224), EntitySelector.pushableBy(this));
         if (!list.isEmpty()) {
             boolean flag = !this.level().isClientSide && !(this.getControllingPassenger() instanceof Player);
 
-            for(int j = 0; j < list.size(); ++j) {
+            for (int j = 0; j < list.size(); ++j) {
                 Entity entity = (Entity)list.get(j);
                 if (!entity.hasPassenger(this)) {
                     if (flag && this.getPassengers().size() < this.getMaxPassengers() && !entity.isPassenger() && this.hasEnoughSpaceFor(entity) && entity instanceof LivingEntity && !(entity instanceof WaterAnimal) && !(entity instanceof Player)) {
@@ -295,48 +302,6 @@ public abstract class AbstractSurfboard extends Entity {
                 }
             }
         }
-    }
-
-    private void tickBubbleColumn() {
-        int k;
-        if (this.level().isClientSide) {
-            k = this.getBubbleTime();
-            if (k > 0) {
-                this.bubbleMultiplier += 0.05F;
-            } else {
-                this.bubbleMultiplier -= 0.1F;
-            }
-
-            this.bubbleMultiplier = Mth.clamp(this.bubbleMultiplier, 0.0F, 1.0F);
-            this.bubbleAngleO = this.bubbleAngle;
-            this.bubbleAngle = 10.0F * (float)Math.sin((double)(0.5F * (float)this.level().getGameTime())) * this.bubbleMultiplier;
-        } else {
-            if (!this.isAboveBubbleColumn) {
-                this.setBubbleTime(0);
-            }
-
-            k = this.getBubbleTime();
-            if (k > 0) {
-                --k;
-                this.setBubbleTime(k);
-                int j = 60 - k - 1;
-                if (j > 0 && k == 0) {
-                    this.setBubbleTime(0);
-                    Vec3 vec3 = this.getDeltaMovement();
-                    if (this.bubbleColumnDirectionIsDown) {
-                        this.setDeltaMovement(vec3.add(0.0, -0.7, 0.0));
-                        this.ejectPassengers();
-                    } else {
-                        this.setDeltaMovement(vec3.x, this.hasPassenger((p_150274_) -> {
-                            return p_150274_ instanceof Player;
-                        }) ? 2.7 : 0.6, vec3.z);
-                    }
-                }
-
-                this.isAboveBubbleColumn = false;
-            }
-        }
-
     }
 
     @Nullable
@@ -362,12 +327,6 @@ public abstract class AbstractSurfboard extends Entity {
             this.setRot(this.getYRot(), this.getXRot());
         }
 
-    }
-
-    @Override
-    public boolean isControlledByLocalInstance() {
-        LivingEntity livingentity = this.getControllingPassenger();
-        return livingentity instanceof Player player;
     }
 
     private SurfboardEntity.Status getStatus() {
@@ -595,6 +554,7 @@ public abstract class AbstractSurfboard extends Entity {
         return pEntity.getBbWidth() < this.getBbWidth();
     }
 
+    @Override
     protected void positionRider(Entity pPassenger, Entity.MoveFunction pCallback) {
         if (this.hasPassenger(pPassenger)) {
             float f = this.getSinglePassengerXOffset();
@@ -612,6 +572,7 @@ public abstract class AbstractSurfboard extends Entity {
                 }
             }
 
+            // TODO new postition for riding surfboard
             Vec3 vec3 = (new Vec3((double)f, 0.0, 0.0)).yRot(-this.getYRot() * 0.017453292F - 1.5707964F);
             pCallback.accept(pPassenger, this.getX() + vec3.x, this.getY() + (double)f1, this.getZ() + vec3.z);
             pPassenger.setYRot(pPassenger.getYRot() + this.deltaRotation);
@@ -625,8 +586,8 @@ public abstract class AbstractSurfboard extends Entity {
         }
 
     }
-
-    public Vec3 getDismountLocationForPassenger(LivingEntity pLivingEntity) {
+    @Override
+    public @NotNull Vec3 getDismountLocationForPassenger(LivingEntity pLivingEntity) {
         Vec3 vec3 = getCollisionHorizontalEscapeVector((double)(this.getBbWidth() * Mth.SQRT_OF_TWO), (double)pLivingEntity.getBbWidth(), pLivingEntity.getYRot());
         double d0 = this.getX() + vec3.x;
         double d1 = this.getZ() + vec3.z;
@@ -646,7 +607,7 @@ public abstract class AbstractSurfboard extends Entity {
 
             UnmodifiableIterator var14 = pLivingEntity.getDismountPoses().iterator();
 
-            while(var14.hasNext()) {
+            while (var14.hasNext()) {
                 Pose pose = (Pose)var14.next();
                 Iterator var16 = list.iterator();
 
@@ -672,21 +633,25 @@ public abstract class AbstractSurfboard extends Entity {
         pEntityToUpdate.setYHeadRot(pEntityToUpdate.getYRot());
     }
 
+    @Override
     public void onPassengerTurned(Entity pEntityToUpdate) {
         this.clampRotation(pEntityToUpdate);
     }
 
+    @Override
     protected void addAdditionalSaveData(CompoundTag pCompound) {
         pCompound.putString("Type", this.getModVariant().getSerializedName());
     }
 
+    @Override
     protected void readAdditionalSaveData(CompoundTag pCompound) {
         if (pCompound.contains("Type", 8)) {
             this.setVariant(SurfboardEntity.Type.byName(pCompound.getString("Type")));
         }
     }
 
-    public InteractionResult interact(Player pPlayer, InteractionHand pHand) {
+    @Override
+    public @NotNull InteractionResult interact(Player pPlayer, @NotNull InteractionHand pHand) {
         if (pPlayer.isSecondaryUseActive()) {
             return InteractionResult.PASS;
         } else if (this.outOfControlTicks < 60.0F) {
@@ -700,6 +665,7 @@ public abstract class AbstractSurfboard extends Entity {
         }
     }
 
+    @Override
     protected void checkFallDamage(double pY, boolean pOnGround, BlockState pState, BlockPos pPos) {
         this.lastYd = this.getDeltaMovement().y;
         if (!this.isPassenger()) {
@@ -750,18 +716,6 @@ public abstract class AbstractSurfboard extends Entity {
         return (Integer)this.entityData.get(DATA_ID_HURT);
     }
 
-    private void setBubbleTime(int pBubbleTime) {
-        this.entityData.set(DATA_ID_BUBBLE_TIME, pBubbleTime);
-    }
-
-    private int getBubbleTime() {
-        return (Integer)this.entityData.get(DATA_ID_BUBBLE_TIME);
-    }
-
-    public float getBubbleAngle(float pPartialTicks) {
-        return Mth.lerp(pPartialTicks, this.bubbleAngleO, this.bubbleAngle);
-    }
-
     public boolean isPaddling() {
         return (Boolean)this.entityData.get(DATA_ID_PADDLING);
     }
@@ -791,9 +745,8 @@ public abstract class AbstractSurfboard extends Entity {
     }
 
     protected int getMaxPassengers() {
-        return 2;
+        return 1;
     }
-
 
     @Nullable
     @Override
@@ -817,10 +770,12 @@ public abstract class AbstractSurfboard extends Entity {
         this.inputDown = pInputDown;
     }
 
+    @Override
     public boolean isUnderWater() {
         return this.status == AbstractSurfboard.Status.UNDER_WATER || this.status == AbstractSurfboard.Status.UNDER_FLOWING_WATER;
     }
 
+    @Override
     protected void addPassenger(Entity passenger) {
         super.addPassenger(passenger);
         if (this.isControlledByLocalInstance() && this.lerpSteps > 0) {
@@ -830,6 +785,7 @@ public abstract class AbstractSurfboard extends Entity {
 
     }
 
+    @Override
     public ItemStack getPickResult() {
         return new ItemStack(this.getDropItem());
     }
