@@ -41,7 +41,6 @@ public class SurfboardItem extends Item {
 
         } else {
             Vec3 viewVector = pPlayer.getViewVector(1.0F);
-            double $$6 = 5.0;
             List<Entity> entityList = pLevel.getEntities(pPlayer, pPlayer.getBoundingBox().expandTowards(viewVector.scale(5.0)).inflate(1.0), ENTITY_PREDICATE);
             if (!entityList.isEmpty()) {
                 Vec3 playerEyePosition = pPlayer.getEyePosition();

@@ -21,7 +21,7 @@ public class ModEntities
 
     public static final RegistryObject<EntityType<Entity>> SURFBOARD =
             ENTITY_TYPES.register("surfboard", () -> EntityType.Builder.of(SurfboardEntity::new, MobCategory.MISC)
-                    .sized(1.375f, 0.5625f).build("surfboard"));
+                    .sized(2f, 0.05f).build("surfboard"));
 
 
 

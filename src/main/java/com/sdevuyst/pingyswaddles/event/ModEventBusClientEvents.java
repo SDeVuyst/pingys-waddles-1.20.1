@@ -21,4 +21,6 @@ public class ModEventBusClientEvents
 
         event.registerLayerDefinition(ModModelLayers.OAK_SURFBOARD_LAYER, SurfboardModel::createBodyLayer);
     }
+
+
 }
