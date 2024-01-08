@@ -4,6 +4,7 @@ import com.sdevuyst.pingyswaddles.PingysWaddles;
 import com.sdevuyst.pingyswaddles.entity.client.BabyEmperorPenguinModel;
 import com.sdevuyst.pingyswaddles.entity.client.EmperorPenguinModel;
 import com.sdevuyst.pingyswaddles.entity.client.ModModelLayers;
+import com.sdevuyst.pingyswaddles.entity.client.SurfboardModel;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.client.event.EntityRenderersEvent;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
@@ -17,5 +18,8 @@ public class ModEventBusClientEvents
     {
         event.registerLayerDefinition(ModModelLayers.EMPEROR_PENGUIN_LAYER, EmperorPenguinModel::createBodyLayer);
         event.registerLayerDefinition(ModModelLayers.BABY_EMPEROR_PENGUIN_LAYER, BabyEmperorPenguinModel::createBodyLayer);
+
+        event.registerLayerDefinition(ModModelLayers.OAK_SURFBOARD_LAYER, SurfboardModel::createBodyLayer);
     }
+
 }

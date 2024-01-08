@@ -1,6 +1,9 @@
 package com.sdevuyst.pingyswaddles.entity;
 import com.sdevuyst.pingyswaddles.PingysWaddles;
+import com.sdevuyst.pingyswaddles.entity.custom.AbstractSurfboard;
 import com.sdevuyst.pingyswaddles.entity.custom.EmperorPenguinEntity;
+import com.sdevuyst.pingyswaddles.entity.custom.SurfboardEntity;
+import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.MobCategory;
 import net.minecraftforge.eventbus.api.IEventBus;
@@ -16,6 +19,10 @@ public class ModEntities
     public static final RegistryObject<EntityType<EmperorPenguinEntity>> EMPEROR_PENGUIN =
             ENTITY_TYPES.register("emperor_penguin", () -> EntityType.Builder.of(EmperorPenguinEntity::new, MobCategory.CREATURE)
                     .sized(2, 2).build("emperor_penguin"));
+
+    public static final RegistryObject<EntityType<Entity>> SURFBOARD =
+            ENTITY_TYPES.register("surfboard", () -> EntityType.Builder.of(SurfboardEntity::new, MobCategory.MISC)
+                    .sized(1f, 0.05f).build("surfboard"));
 
 
 

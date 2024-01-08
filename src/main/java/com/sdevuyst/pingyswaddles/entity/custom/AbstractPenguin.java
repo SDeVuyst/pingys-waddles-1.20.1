@@ -1,5 +1,6 @@
 package com.sdevuyst.pingyswaddles.entity.custom;
 
+import com.sdevuyst.pingyswaddles.PingysWaddles;
 import net.minecraft.core.BlockPos;
 import net.minecraft.network.syncher.EntityDataAccessor;
 import net.minecraft.network.syncher.EntityDataSerializers;
@@ -20,11 +21,20 @@ import net.minecraft.world.item.crafting.Ingredient;
 import net.minecraft.world.level.ItemLike;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.ServerLevelAccessor;
+import net.minecraft.world.phys.Vec3;
 
 public abstract class AbstractPenguin extends Animal {
     private static final Ingredient FOOD_ITEMS;
+
     protected static EntityDimensions NORMAL_DIMENSIONS;
     protected static EntityDimensions BABY_DIMENSIONS;
+
+    public final AnimationState idleAnimationState = new AnimationState();
+    private int idleAnimationTimeout = 0;
+
+    public final AnimationState fallingAnimationState = new AnimationState();
+    private static final EntityDataAccessor<Boolean> FALLING =
+            SynchedEntityData.defineId(AbstractPenguin.class, EntityDataSerializers.BOOLEAN);
 
     protected AbstractPenguin(EntityType<? extends Animal> pEntityType, Level pLevel) {
         super(pEntityType, pLevel);
@@ -42,9 +52,37 @@ public abstract class AbstractPenguin extends Animal {
     }
 
     private void setupAnimationStates() {
-        ;
+        if (this.idleAnimationTimeout <= 0) {
+            this.idleAnimationTimeout = this.random.nextInt(80) + 80;
+            this.idleAnimationState.start(this.tickCount);
+        } else {
+            --this.idleAnimationTimeout;
+        }
+
     }
 
+    @Override
+    public void aiStep() {
+        super.aiStep();
+
+        // detect fall
+        Vec3 deltaMovement = this.getDeltaMovement();
+        if (!this.onGround() && deltaMovement.y < 0.0 && !this.isFalling()) {
+            this.setFalling(true);
+
+            // stop idle animation
+            this.idleAnimationState.stop();
+            this.idleAnimationTimeout = 0;
+
+            // start falling animation
+            this.fallingAnimationState.start(this.tickCount);
+
+        } else if (this.isFalling() && this.onGround()) {
+            // stop falling animation
+            this.setFalling(false);
+            this.fallingAnimationState.stop();
+        }
+    }
 
     @Override
     protected void updateWalkAnimation(float pPartialTick) {
@@ -86,14 +124,26 @@ public abstract class AbstractPenguin extends Animal {
 
     @Override
     public EntityDimensions getDimensions(Pose pPose) {
-        if (this.isBaby()) {
-            return BABY_DIMENSIONS.scale(this.getScale());
-        }
-        return NORMAL_DIMENSIONS.scale(this.getScale());
+        EntityDimensions dimension = this.isBaby() ? BABY_DIMENSIONS : NORMAL_DIMENSIONS;
+        return dimension.scale(this.getScale());
     }
 
     protected float getStandingEyeHeight(Pose pPose, EntityDimensions pSize) {
         return pSize.height * 0.85F;
+    }
+
+    @Override
+    protected void defineSynchedData() {
+        super.defineSynchedData();
+        this.entityData.define(FALLING, false);
+    }
+
+    public void setFalling(boolean falling) {
+        this.entityData.set(FALLING, falling);
+    }
+
+    public boolean isFalling() {
+        return this.entityData.get(FALLING);
     }
 
 

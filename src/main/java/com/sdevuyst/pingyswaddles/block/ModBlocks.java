@@ -2,7 +2,7 @@ package com.sdevuyst.pingyswaddles.block;
 
 import com.sdevuyst.pingyswaddles.PingysWaddles;
 
-import com.sdevuyst.pingyswaddles.item.custom.ModItems;
+import com.sdevuyst.pingyswaddles.item.ModItems;
 import net.minecraft.world.item.BlockItem;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.level.block.*;
