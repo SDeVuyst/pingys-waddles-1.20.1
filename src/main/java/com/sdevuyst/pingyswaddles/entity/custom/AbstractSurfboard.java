@@ -7,6 +7,7 @@ import net.minecraft.BlockUtil;
 import net.minecraft.client.Minecraft;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
+import net.minecraft.core.Rotations;
 import net.minecraft.core.particles.ParticleTypes;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.network.syncher.EntityDataAccessor;
@@ -32,6 +33,7 @@ import net.minecraft.world.level.GameRules;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.Blocks;
+import net.minecraft.world.level.block.Rotation;
 import net.minecraft.world.level.block.WaterlilyBlock;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.gameevent.GameEvent;
@@ -76,6 +78,11 @@ public abstract class AbstractSurfboard extends Entity {
     private SurfboardEntity.Status status;
     private SurfboardEntity.Status oldStatus;
     private double lastYd;
+    private boolean isAboveBubbleColumn;
+    private boolean bubbleColumnDirectionIsDown;
+    private float bubbleMultiplier;
+    private float bubbleAngle;
+    private float bubbleAngleO;
 
     public AbstractSurfboard(EntityType<?> pEntityType, Level pLevel) {
         super(pEntityType, pLevel);
@@ -261,7 +268,10 @@ public abstract class AbstractSurfboard extends Entity {
             this.inputLeft = Minecraft.getInstance().options.keyLeft.isDown();
             this.inputRight= Minecraft.getInstance().options.keyRight.isDown();
 
-            this.setPaddling(this.inputRight || this.inputLeft || this.inputUp || this.inputDown);
+            this.setPaddling(
+                    (this.inputRight || this.inputLeft || this.inputUp || this.inputDown)
+                    && this.isControlledByLocalInstance()
+            );
 
             // actually move the surfboard
             this.move(MoverType.SELF, this.getDeltaMovement());
@@ -273,7 +283,7 @@ public abstract class AbstractSurfboard extends Entity {
 
         // play paddling sounds
         for(int i = 0; i <= 1; ++i) {
-            if (!this.isSilent() && this.isPaddling()) {
+            if (this.isSilent() && this.isPaddling()) {
                 SoundEvent soundevent = this.getPaddleSound();
                 if (soundevent != null) {
                     Vec3 vec3 = this.getViewVector(1.0F);
@@ -477,28 +487,34 @@ public abstract class AbstractSurfboard extends Entity {
     }
 
     private void floatSurfboard() {
-        double d0 = -0.03999999910593033;
-        double d1 = this.isNoGravity() ? 0.0 : -0.03999999910593033;
+        double d0 = (double) -1/50;
+        double d1 = this.isNoGravity() ? 0.0 : (double) -1/50;
         double d2 = 0.0;
-        this.invFriction = 0.05F;
+        this.invFriction = 0.03F;
+
         if (this.oldStatus == AbstractSurfboard.Status.IN_AIR && this.status != AbstractSurfboard.Status.IN_AIR && this.status != AbstractSurfboard.Status.ON_LAND) {
             this.waterLevel = this.getY(1.0);
-            this.setPos(this.getX(), (double)(this.getWaterLevelAbove() - this.getBbHeight()) + 0.101, this.getZ());
+            this.setPos(this.getX(), (double)(this.getWaterLevelAbove() - this.getBbHeight() + 0.101), this.getZ());
             this.setDeltaMovement(this.getDeltaMovement().multiply(1.0, 0.0, 1.0));
             this.lastYd = 0.0;
             this.status = AbstractSurfboard.Status.IN_WATER;
+
         } else {
             if (this.status == AbstractSurfboard.Status.IN_WATER) {
                 d2 = (this.waterLevel - this.getY()) / (double)this.getBbHeight();
                 this.invFriction = 0.9F;
+
             } else if (this.status == AbstractSurfboard.Status.UNDER_FLOWING_WATER) {
                 d1 = -7.0E-4;
                 this.invFriction = 0.9F;
+
             } else if (this.status == AbstractSurfboard.Status.UNDER_WATER) {
-                d2 = 0.009999999776482582;
+                d2 = (this.waterLevel - this.getY()) / (double)this.getBbHeight();
                 this.invFriction = 0.45F;
+
             } else if (this.status == AbstractSurfboard.Status.IN_AIR) {
                 this.invFriction = 0.9F;
+
             } else if (this.status == AbstractSurfboard.Status.ON_LAND) {
                 this.invFriction = this.landFriction;
                 if (this.getControllingPassenger() instanceof Player) {
@@ -511,10 +527,22 @@ public abstract class AbstractSurfboard extends Entity {
             this.deltaRotation *= this.invFriction;
             if (d2 > 0.0) {
                 Vec3 vec31 = this.getDeltaMovement();
-                this.setDeltaMovement(vec31.x, (vec31.y + d2 * 0.06153846016296973) * 0.75, vec31.z);
+                this.setDeltaMovement(vec31.x, (vec31.y + d2 * 0.06) * 0.75, vec31.z);
             }
         }
 
+    }
+
+    private void setBubbleTime(int pBubbleTime) {
+        this.entityData.set(DATA_ID_BUBBLE_TIME, pBubbleTime);
+    }
+
+    private int getBubbleTime() {
+        return (Integer)this.entityData.get(DATA_ID_BUBBLE_TIME);
+    }
+
+    public float getBubbleAngle(float pPartialTicks) {
+        return Mth.lerp(pPartialTicks, this.bubbleAngleO, this.bubbleAngle);
     }
 
     private void controlSurfboard() {
@@ -761,13 +789,6 @@ public abstract class AbstractSurfboard extends Entity {
         }
 
         return livingentity1;
-    }
-
-    public void setInput(boolean pInputLeft, boolean pInputRight, boolean pInputUp, boolean pInputDown) {
-        this.inputLeft = pInputLeft;
-        this.inputRight = pInputRight;
-        this.inputUp = pInputUp;
-        this.inputDown = pInputDown;
     }
 
     @Override

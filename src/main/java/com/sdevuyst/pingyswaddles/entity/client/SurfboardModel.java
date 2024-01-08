@@ -40,8 +40,7 @@ public class SurfboardModel<T extends Entity> extends HierarchicalModel<T> {
                 .texOffs(0, 10).addBox(-35.0F, -1.0F, -3.0F, 40.0F, 1.0F, 1.0F, new CubeDeformation(0.0F))
                 .texOffs(0, 16).addBox(-33.0F, -1.0F, -4.0F, 35.0F, 1.0F, 1.0F, new CubeDeformation(0.0F))
                 .texOffs(0, 14).addBox(-33.0F, -1.0F, 4.0F, 35.0F, 1.0F, 1.0F, new CubeDeformation(0.0F))
-                , PartPose.offsetAndRotation(0.0F, 1.0F, 0.0F, 0.0F, 0F, 0.0F));
-
+                , PartPose.offsetAndRotation(0, 1, 0, 0, 135F, 0));
         return LayerDefinition.create(meshdefinition, 128, 128);
     }
 

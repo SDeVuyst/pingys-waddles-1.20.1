@@ -1,5 +1,6 @@
 package com.sdevuyst.pingyswaddles.entity;
 import com.sdevuyst.pingyswaddles.PingysWaddles;
+import com.sdevuyst.pingyswaddles.entity.custom.AbstractSurfboard;
 import com.sdevuyst.pingyswaddles.entity.custom.EmperorPenguinEntity;
 import com.sdevuyst.pingyswaddles.entity.custom.SurfboardEntity;
 import net.minecraft.world.entity.Entity;
@@ -21,7 +22,7 @@ public class ModEntities
 
     public static final RegistryObject<EntityType<Entity>> SURFBOARD =
             ENTITY_TYPES.register("surfboard", () -> EntityType.Builder.of(SurfboardEntity::new, MobCategory.MISC)
-                    .sized(2f, 0.05f).build("surfboard"));
+                    .sized(1f, 0.05f).build("surfboard"));
 
 
 
