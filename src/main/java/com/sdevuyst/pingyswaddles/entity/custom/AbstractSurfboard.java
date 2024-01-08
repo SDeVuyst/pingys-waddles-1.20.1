@@ -142,7 +142,7 @@ public abstract class AbstractSurfboard extends Entity {
 
     @Override
     public double getPassengersRidingOffset() {
-        return -0.1;
+        return 0.4F;
     }
 
     @Override
@@ -286,7 +286,7 @@ public abstract class AbstractSurfboard extends Entity {
                     this.level().addParticle(
                             ParticleTypes.BUBBLE,
                             this.getX() + delta.x,
-                            this.getY() + delta.y,
+                            this.getY() + delta.y - 0.01F,
                             this.getZ() + delta.z,
                             direction.getStepX(),
                             direction.getStepY(),
@@ -301,15 +301,11 @@ public abstract class AbstractSurfboard extends Entity {
         }
 
         // play paddling sounds
-        for(int i = 0; i <= 1; ++i) {
-            if (this.isSilent() && this.isPaddling()) {
-                SoundEvent soundevent = this.getPaddleSound();
-                if (soundevent != null) {
-                    Vec3 vec3 = this.getViewVector(1.0F);
-                    double d0 = i == 1 ? -vec3.z : vec3.z;
-                    double d1 = i == 1 ? vec3.x : -vec3.x;
-                    this.level().playSound((Player)null, this.getX() + d0, this.getY(), this.getZ() + d1, soundevent, this.getSoundSource(), 1.0F, 0.8F + 0.4F * this.random.nextFloat());
-                }
+        if (this.isPaddling() && isControlledByLocalInstance()) {
+            SoundEvent soundevent = this.getPaddleSound();
+            if (soundevent != null) {
+                Vec3 vec3 = this.getViewVector(1.0F);
+                this.level().playSound((Player)null, this.getX() + vec3.z, this.getY(), this.getZ() + vec3.x, soundevent, this.getSoundSource(), 1.0F, 0.8F + 0.4F * this.random.nextFloat());
             }
         }
 
@@ -336,6 +332,11 @@ public abstract class AbstractSurfboard extends Entity {
     @Nullable
     protected SoundEvent getPaddleSound() {
         return SoundEvents.BOAT_PADDLE_WATER;
+    }
+
+    @Override
+    public boolean shouldRiderSit() {
+        return false;
     }
 
     private void tickLerp() {
