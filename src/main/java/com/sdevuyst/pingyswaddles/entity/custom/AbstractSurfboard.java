@@ -276,6 +276,25 @@ public abstract class AbstractSurfboard extends Entity {
             // actually move the surfboard
             this.move(MoverType.SELF, this.getDeltaMovement());
 
+            // spawn particles
+            if (this.isPaddling()) {
+                Vec3 delta = this.getDeltaMovement();
+                Direction direction = this.getDirection();
+
+                for (int bubbleCount = 0; bubbleCount < 30; bubbleCount++) {
+
+                    this.level().addParticle(
+                            ParticleTypes.BUBBLE,
+                            this.getX() + delta.x,
+                            this.getY() + delta.y,
+                            this.getZ() + delta.z,
+                            direction.getStepX(),
+                            direction.getStepY(),
+                            direction.getStepZ()
+                    );
+                }
+            }
+
         } else {
             // don't move anything
             this.setDeltaMovement(Vec3.ZERO);
@@ -585,32 +604,18 @@ public abstract class AbstractSurfboard extends Entity {
     @Override
     protected void positionRider(Entity pPassenger, Entity.MoveFunction pCallback) {
         if (this.hasPassenger(pPassenger)) {
-            float f = this.getSinglePassengerXOffset();
-            float f1 = (float)((this.isRemoved() ? 0.009999999776482582 : this.getPassengersRidingOffset()) + pPassenger.getMyRidingOffset());
-            if (this.getPassengers().size() > 1) {
-                int i = this.getPassengers().indexOf(pPassenger);
-                if (i == 0) {
-                    f = 0.2F;
-                } else {
-                    f = -0.6F;
-                }
+            double xOffset = this.getSinglePassengerXOffset();
+            double ridingOffset = (float)((this.isRemoved() ? 0.009999999776482582 : this.getPassengersRidingOffset()) + pPassenger.getMyRidingOffset());
 
-                if (pPassenger instanceof Animal) {
-                    f += 0.2F;
-                }
-            }
+            Vec3 vec3 = (new Vec3(xOffset, 0.0, 0.0)).yRot(-this.getYRot() * 0.017453292F - 1.5707964F);
+            pCallback.accept(pPassenger, this.getX() + vec3.x, this.getY() + ridingOffset, this.getZ() + vec3.z);
 
-            // TODO new postition for riding surfboard
-            Vec3 vec3 = (new Vec3((double)f, 0.0, 0.0)).yRot(-this.getYRot() * 0.017453292F - 1.5707964F);
-            pCallback.accept(pPassenger, this.getX() + vec3.x, this.getY() + (double)f1, this.getZ() + vec3.z);
+            // Y rotation
             pPassenger.setYRot(pPassenger.getYRot() + this.deltaRotation);
             pPassenger.setYHeadRot(pPassenger.getYHeadRot() + this.deltaRotation);
+
+            // lock this position/rotation while on surfboard
             this.clampRotation(pPassenger);
-            if (pPassenger instanceof Animal && this.getPassengers().size() == this.getMaxPassengers()) {
-                int j = pPassenger.getId() % 2 == 0 ? 90 : 270;
-                pPassenger.setYBodyRot(((Animal)pPassenger).yBodyRot + (float)j);
-                pPassenger.setYHeadRot(pPassenger.getYHeadRot() + (float)j);
-            }
         }
 
     }
@@ -684,7 +689,9 @@ public abstract class AbstractSurfboard extends Entity {
             return InteractionResult.PASS;
         } else if (this.outOfControlTicks < 60.0F) {
             if (!this.level().isClientSide) {
+
                 return pPlayer.startRiding(this) ? InteractionResult.CONSUME : InteractionResult.PASS;
+
             } else {
                 return InteractionResult.SUCCESS;
             }
